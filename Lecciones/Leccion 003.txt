@@ -1,0 +1,43 @@
+Lección 003 - Panel web Streamlit + responsive
+
+Herramientas nuevas:
+- streamlit (panel web)
+- pandas (manejo de datos en tabla)
+- Streamlit Cloud (nube gratuita 24/7 para el panel)
+
+Qué aprendí a hacer:
+1. Crear un panel web con Streamlit: métricas, formulario, tabla editable
+2. Controlar versión del botón "Agregar" para que no se dispare solo
+3. Conectar el panel a Google Sheets (misma cuenta de servicio que el bot)
+4. **Problema**: Streamlit Cloud rompe el JSON de credenciales al pasarlo por TOML
+   - Solución: guardar el JSON como base64 (una línea, sin escapes)
+   - Código: probar JSON directo -> base64 -> regex de emergencia
+5. Aislar la conexión a Google Sheets con try/except para que no tire error en local
+6. Responsive + Material Design con CSS custom:
+   - Cards con sombra, inputs redondeados, botón con gradiente
+   - Media queries: mobile (columnas al 100%) / desktop (máx 1100px)
+   - Tipografía Inter, colores #1a1a2e y #6c63ff
+
+Arquitectura final:
+  Telegram -> Bot (Railway/nube) -> Google Sheets
+  Celular/PC -> Panel web (Streamlit Cloud) -> Google Sheets
+
+Archivos importantes:
+- web_app.py: panel Streamlit (responsive, Material Design)
+- bot_gastos.py: bot de Telegram (sin cambios)
+- credenciales.json: clave de servicio (NUNCA subir a GitHub)
+
+Comandos útiles:
+- git add . && git commit -m "mensaje" && git push -> actualiza Railway y Streamlit Cloud
+- Railway se actualiza solo con cada push a main
+- Streamlit Cloud se actualiza solo con cada push a main
+- Los secrets de Streamlit Cloud se editan en Settings > Secrets (formato TOML)
+
+Secretos en Streamlit Cloud:
+- SHEET_ID = "16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A"
+- GOOGLE_CREDENTIALS = "base64 del JSON" (una sola línea, sin comillas extra)
+
+Cosas que pueden fallar:
+- Si el panel se queda cargando sin mostrar datos -> Google Sheets no responde (firewall/proxy)
+- Si tira JSONDecodeError -> el secreto GOOGLE_CREDENTIALS tiene el formato incorrecto
+- Railways no necesita Procfile porque detecta Python automático

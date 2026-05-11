@@ -35,31 +35,31 @@ def guardar_todo(df):
     ws.update(range_name="A1", values=datos)
 
 
-st.set_page_config(page_title="Panel de Gastos", layout="wide")
+st.set_page_config(page_title="Panel de Gastos", layout="wide", menu_items=None)
 st.title("Panel de Gastos")
 
 df = cargar_datos()
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Gastos", f"${df['Monto'].sum():,.0f}")
-col2.metric("Cantidad", len(df))
-col3.metric("Promedio", f"${df['Monto'].mean():,.0f}" if len(df) > 0 else "$0")
+col_izq, col_der = st.columns(2)
 
-st.divider()
-st.subheader("Agregar gasto")
+with col_izq:
+    st.metric("Total Gastos", f"${df['Monto'].sum():,.0f}")
+    st.metric("Cantidad de Gastos", len(df))
 
-with st.form("nuevo_gasto", clear_on_submit=True):
-    c1, c2, c3 = st.columns([2, 1, 1])
-    with c1:
-        concepto = st.text_input("Concepto")
-    with c2:
-        monto = st.number_input("Monto", min_value=0.0, step=100.0, format="%.0f")
-    with c3:
-        fecha = st.date_input("Fecha", value=datetime.today())
-    if st.form_submit_button("Agregar"):
-        if concepto and monto > 0:
-            ws.append_row([str(fecha), concepto.capitalize(), monto])
-            st.rerun()
+with col_der:
+    with st.form("nuevo_gasto", clear_on_submit=True):
+        st.subheader("Agregar gasto")
+        i1, i2, i3 = st.columns([2, 1, 1])
+        with i1:
+            concepto = st.text_input("Concepto", label_visibility="collapsed", placeholder="Concepto")
+        with i2:
+            monto = st.number_input("Monto", min_value=0.0, step=100.0, format="%.0f", label_visibility="collapsed", placeholder="Monto")
+        with i3:
+            fecha = st.date_input("Fecha", value=datetime.today(), label_visibility="collapsed")
+        if st.form_submit_button("Agregar", use_container_width=True):
+            if concepto and monto > 0:
+                ws.append_row([str(fecha), concepto.capitalize(), monto])
+                st.rerun()
 
 st.divider()
 st.subheader("Editar / Eliminar")

@@ -12,8 +12,26 @@ try:
     creds_json = os.getenv("GOOGLE_CREDENTIALS") or st.secrets.get("GOOGLE_CREDENTIALS")
 except Exception:
     creds_json = os.getenv("GOOGLE_CREDENTIALS")
+
+
+def _load_creds(text):
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    # Fix: TOML expands \n inside string values when using """..."""
+    # Replace actual newlines inside double-quoted JSON strings with \n
+    import re
+    text = re.sub(
+        r'"(?:[^"\\]|\\.)*"',
+        lambda m: m.group(0).replace("\n", "\\n"),
+        text,
+    )
+    return json.loads(text)
+
+
 if creds_json:
-    gc = gspread.service_account_from_dict(json.loads(creds_json))
+    gc = gspread.service_account_from_dict(_load_creds(creds_json))
 else:
     gc = gspread.service_account(filename="credenciales.json")
 sh = gc.open_by_key(SHEET_ID)

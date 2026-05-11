@@ -67,7 +67,7 @@ async def total(update: Update, _context):
     await update.message.reply_text(f"Total gastos: ${total:,.0f}")
 
 
-async def gastos(update: Update, _context):
+async def gastos(update: Update, context):
     try:
         ws = sh.worksheet("detalle gastos")
     except Exception:
@@ -77,11 +77,40 @@ async def gastos(update: Update, _context):
     if not registros:
         await update.message.reply_text("No hay gastos registrados.")
         return
-    lineas = []
-    for r in registros[-10:]:
-        if len(r) >= 3 and r[2]:
-            lineas.append(f"{r[0]} | {r[1]} | ${r[2]}")
-    await update.message.reply_text("Últimos gastos:\n" + "\n".join(lineas))
+    ultimos = [(i + 1, r) for i, r in enumerate(registros) if len(r) >= 3 and r[2]]
+    ultimos = ultimos[-10:]
+    context.user_data["ultimos_gastos"] = ultimos
+    lineas = [f"{n}. {r[0]} | {r[1]} | ${float(r[2]):,.0f}" for n, r in ultimos]
+    texto = "Últimos gastos:\n" + "\n".join(lineas) + "\n\nUsá /borrar N para eliminar uno (ej: /borrar 1)"
+    await update.message.reply_text(texto)
+
+
+async def borrar(update: Update, context):
+    try:
+        n = int(context.args[0])
+    except (IndexError, ValueError):
+        await update.message.reply_text("Usá: /borrar N (ej: /borrar 1)")
+        return
+    ultimos = context.user_data.get("ultimos_gastos")
+    if not ultimos:
+        await update.message.reply_text("Primero usá /gastos para ver la lista.")
+        return
+    encontrado = None
+    for num, fila in ultimos:
+        if num == n:
+            encontrado = fila
+            break
+    if not encontrado:
+        await update.message.reply_text(f"Número {n} no encontrado. Usá /gastos para ver la lista.")
+        return
+    ws = sh.worksheet("detalle gastos")
+    celdas = ws.findall(encontrado[1], in_column=2)
+    for celda in celdas:
+        if ws.cell(celda.row, 3).value == encontrado[2]:
+            ws.delete_rows(celda.row)
+            await update.message.reply_text(f"Eliminado: {encontrado[1]} ${float(encontrado[2]):,.0f}")
+            return
+    await update.message.reply_text("No se pudo eliminar el gasto.")
 
 
 async def manejar_voz(update: Update, context):
@@ -123,6 +152,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("total", total))
     app.add_handler(CommandHandler("gastos", gastos))
+    app.add_handler(CommandHandler("borrar", borrar))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
     app.add_handler(MessageHandler(filters.VOICE, manejar_voz))
     print("Bot iniciado (texto + voz). Presioná Ctrl+C para detenerlo.")

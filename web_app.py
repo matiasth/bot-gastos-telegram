@@ -204,7 +204,15 @@ st.markdown("""
 
     /* ── mobile column stack ── */
     @media (max-width: 639px) {
-        div[data-testid="column"] { min-width: 100% !important; }
+        div[data-testid="column"] {
+            min-width: 100% !important;
+            flex: 0 0 100% !important;
+            width: 100% !important;
+        }
+        section[data-testid="stSidebar"] + div .main div[data-testid="columns"] {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+        }
         .stMetric { padding: 0.75rem 1rem; }
         .stMetric [data-testid="stMetricValue"] { font-size: 1.5rem !important; }
     }

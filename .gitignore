@@ -1,0 +1,8 @@
+credenciales.json
+bot_err.txt
+bot_out.txt
+*.bak
+~temp*
+Presupuesto-2026*
+__pycache__/
+*.pyc

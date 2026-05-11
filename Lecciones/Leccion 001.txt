@@ -1,0 +1,20 @@
+Lección 001 - Primeros pasos con OpenCode + Python + Excel
+
+Herramientas instaladas:
+- Python 3.12
+- Librería openpyxl (para leer/escribir Excel)
+- Librería pandas
+
+Qué aprendí a hacer:
+1. Leer archivos Excel con openpyxl (hojas, filas, columnas, valores)
+2. Agregar nuevas filas con datos (fecha, concepto, monto)
+3. Corregir el formato de las fechas para que no muestren hora
+4. Guardar los cambios en el archivo .xlsx
+
+Qué más puedo hacer con OpenCode:
+- Explicar código o partes de un proyecto
+- Refactorizar archivos (renombrar, reorganizar)
+- Depurar errores
+- Escribir código desde cero (webs, scripts, automatizaciones)
+- Buscar información en el proyecto o en la web
+- Automatizar tareas repetitivas

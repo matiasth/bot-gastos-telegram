@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from datetime import datetime
@@ -9,18 +10,23 @@ import streamlit as st
 SHEET_ID = os.getenv("SHEET_ID", "16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A")
 
 try:
-    creds_json = os.getenv("GOOGLE_CREDENTIALS") or st.secrets.get("GOOGLE_CREDENTIALS")
+    creds_raw = os.getenv("GOOGLE_CREDENTIALS") or st.secrets.get("GOOGLE_CREDENTIALS")
 except Exception:
-    creds_json = os.getenv("GOOGLE_CREDENTIALS")
+    creds_raw = os.getenv("GOOGLE_CREDENTIALS")
 
 
 def _load_creds(text):
+    # 1) Try JSON directly
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    # Fix: TOML expands \n inside string values when using """..."""
-    # Replace actual newlines inside double-quoted JSON strings with \n
+    # 2) Try base64 → JSON
+    try:
+        return json.loads(base64.b64decode(text).decode("utf-8"))
+    except Exception:
+        pass
+    # 3) JSON with newlines inside strings (TOML ate our \n)
     import re
     text = re.sub(
         r'"(?:[^"\\]|\\.)*"',
@@ -30,8 +36,8 @@ def _load_creds(text):
     return json.loads(text)
 
 
-if creds_json:
-    gc = gspread.service_account_from_dict(_load_creds(creds_json))
+if creds_raw:
+    gc = gspread.service_account_from_dict(_load_creds(creds_raw))
 else:
     gc = gspread.service_account(filename="credenciales.json")
 sh = gc.open_by_key(SHEET_ID)

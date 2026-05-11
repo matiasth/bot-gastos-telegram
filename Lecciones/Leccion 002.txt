@@ -1,0 +1,25 @@
+Lección 002 - Bot de Telegram + Google Sheets en la nube
+
+Herramientas instaladas:
+- python-telegram-bot (conexión con Telegram)
+- gspread (conexión con Google Sheets)
+- Git + GitHub (control de versiones)
+- Railway (nube gratuita 24/7)
+
+Qué aprendí a hacer:
+1. Crear un bot de Telegram con BotFather
+2. Conectar Python con Google Sheets usando cuenta de servicio
+3. Usar variables de entorno para datos sensibles (token, credenciales)
+4. Subir código a GitHub (git init, add, commit, push)
+5. Desplegar el bot en Railway para que funcione 24/7
+
+Arquitectura final:
+  Telegram -> Bot (Railway/nube) -> Google Sheets
+
+Comandos del bot:
+  - "concepto monto" (ej: supermercado 5000) -> agrega gasto
+  - /total -> suma de todos los gastos
+  - /gastos -> últimos 10 gastos
+
+Repositorio: https://github.com/matiasth/bot-gastos-telegram
+Sheet: https://docs.google.com/spreadsheets/d/16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A

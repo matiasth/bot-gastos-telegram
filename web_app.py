@@ -62,8 +62,156 @@ def guardar_todo(df):
     ws.update(range_name="A1", values=datos)
 
 
-st.set_page_config(page_title="Panel de Gastos", layout="wide", menu_items=None)
-st.title("Panel de Gastos")
+st.set_page_config(page_title="Presupuesto", layout="wide", menu_items=None)
+
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { font-family: 'Inter', sans-serif; }
+
+    /* ── mobile-first base ── */
+    .stApp { background: #f5f5f5; }
+    .main > .block-container {
+        padding: 1rem 0.75rem;
+        max-width: 100%;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+        padding-bottom: 0.25rem !important;
+        border-bottom: 3px solid #6c63ff;
+        display: inline-block;
+    }
+
+    /* ── metric cards ── */
+    .stMetric {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        margin-bottom: 0.75rem;
+    }
+    .stMetric label {
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        color: #888 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        font-size: 1.75rem !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+    }
+
+    /* ── form card ── */
+    [data-testid="stForm"] {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        border: none;
+    }
+    [data-testid="stForm"] [data-testid="stForm"] { box-shadow: none; padding: 0; }
+    [data-testid="stForm"] h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 0.75rem;
+    }
+
+    /* ── inputs ── */
+    .stTextInput input, .stNumberInput input {
+        border-radius: 12px !important;
+        border: 1.5px solid #e0e0e0 !important;
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.95rem !important;
+        background: #fafafa !important;
+        transition: border .2s, box-shadow .2s;
+    }
+    .stTextInput input:focus, .stNumberInput input:focus {
+        border-color: #6c63ff !important;
+        box-shadow: 0 0 0 3px rgba(108,99,255,.15) !important;
+    }
+    .stDateInput input { border-radius: 12px !important; }
+
+    /* ── buttons ── */
+    .stButton button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        padding: 0.5rem 1rem !important;
+        transition: transform .15s, box-shadow .15s !important;
+        border: none !important;
+    }
+    .stButton button:active { transform: scale(.97); }
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #6c63ff, #5a52d5) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(108,99,255,.3) !important;
+    }
+    button[kind="primary"]:hover {
+        box-shadow: 0 6px 18px rgba(108,99,255,.4) !important;
+    }
+
+    /* ── data editor ── */
+    [data-testid="stDataFrame"] {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    [data-testid="stDataFrame"] thead tr th {
+        background: #6c63ff !important;
+        color: #fff !important;
+        font-weight: 600 !important;
+        font-size: 0.8rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    [data-testid="stDataFrame"] tbody tr td {
+        font-size: 0.9rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    [data-testid="stDataFrame"] tbody tr:nth-child(even) td {
+        background: #fafafa !important;
+    }
+
+    /* ── horizontals / dividers ── */
+    hr { margin: 1.25rem 0 !important; border-color: #e0e0e0 !important; }
+    h2 {
+        font-size: 1.15rem !important;
+        font-weight: 600 !important;
+        color: #1a1a2e !important;
+    }
+
+    /* ── success toast ── */
+    .stAlert {
+        border-radius: 12px !important;
+        border: none !important;
+        font-weight: 500 !important;
+    }
+
+    /* ── desktop overrides ── */
+    @media (min-width: 768px) {
+        .main > .block-container { padding: 2rem 3rem; max-width: 1100px; margin: 0 auto; }
+        h1 { font-size: 2rem !important; }
+        .stMetric [data-testid="stMetricValue"] { font-size: 2.25rem !important; }
+        [data-testid="stForm"] { padding: 1.5rem; }
+    }
+
+    /* ── mobile column stack ── */
+    @media (max-width: 639px) {
+        div[data-testid="column"] { min-width: 100% !important; }
+        .stMetric { padding: 0.75rem 1rem; }
+        .stMetric [data-testid="stMetricValue"] { font-size: 1.5rem !important; }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.title("Presupuesto")
 
 df = cargar_datos()
 
@@ -103,7 +251,7 @@ edit_df = st.data_editor(
     key="editor",
 )
 
-if st.button("Guardar cambios"):
+if st.button("Guardar cambios", type="primary"):
     guardar_todo(edit_df)
     st.success("Cambios guardados en Google Sheets.")
     st.rerun()

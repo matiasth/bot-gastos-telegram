@@ -8,7 +8,7 @@ import streamlit as st
 
 SHEET_ID = os.getenv("SHEET_ID", "16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A")
 
-creds_json = os.getenv("GOOGLE_CREDENTIALS")
+creds_json = os.getenv("GOOGLE_CREDENTIALS") or st.secrets.get("GOOGLE_CREDENTIALS")
 if creds_json:
     gc = gspread.service_account_from_dict(json.loads(creds_json))
 else:

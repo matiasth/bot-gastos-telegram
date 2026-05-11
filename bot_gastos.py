@@ -2,14 +2,20 @@ import json
 import logging
 import os
 import re
+import subprocess
+import tempfile
 from datetime import date
 
 import gspread
+import speech_recognition as sr
+from imageio_ffmpeg import get_ffmpeg_exe
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 TOKEN = os.getenv("TELEGRAM_TOKEN", "8721870314:AAEVSVj2gy1Gu0BeDUHtFH9x4nEgsbCB3ao")
 SHEET_ID = os.getenv("SHEET_ID", "16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A")
+
+FFMPEG = get_ffmpeg_exe()
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -38,9 +44,9 @@ def agregar_gasto(texto: str) -> str:
 
 async def start(update: Update, _context):
     await update.message.reply_text(
-        "Hola! Mandame un gasto así:\n"
-        "supermercado 5000\n\n"
-        "O usá /total o /gastos"
+        "Hola! Mandame un gasto:\n"
+        "supermercado 5000  (texto)\n"
+        "O mandame un audio de voz y lo reconozco"
     )
 
 
@@ -78,6 +84,33 @@ async def gastos(update: Update, _context):
     await update.message.reply_text("Últimos gastos:\n" + "\n".join(lineas))
 
 
+async def manejar_voz(update: Update, context):
+    msg = await update.message.reply_text("Escuchando...")
+    try:
+        voz = update.message.voice
+        archivo = await context.bot.get_file(voz.file_id)
+        with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as f_ogg:
+            await archivo.download_to_drive(f_ogg.name)
+            ogg_path = f_ogg.name
+        wav_path = ogg_path.replace(".ogg", ".wav")
+        subprocess.run([FFMPEG, "-y", "-i", ogg_path, wav_path], capture_output=True)
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(wav_path) as source:
+            audio = recognizer.record(source)
+        texto = recognizer.recognize_google(audio, language="es-AR")
+        os.unlink(ogg_path)
+        os.unlink(wav_path)
+        await msg.edit_text(f"Reconocí: {texto}")
+        respuesta = agregar_gasto(texto)
+        await msg.reply_text(respuesta)
+    except sr.UnknownValueError:
+        await msg.edit_text("No entendí el audio.")
+    except sr.RequestError:
+        await msg.edit_text("Error al conectar con el servicio de voz.")
+    except Exception as e:
+        await msg.edit_text(f"Error: {str(e)[:200]}")
+
+
 async def manejar_mensaje(update: Update, _context):
     if not update.message or not update.message.text:
         return
@@ -91,7 +124,8 @@ def main():
     app.add_handler(CommandHandler("total", total))
     app.add_handler(CommandHandler("gastos", gastos))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_mensaje))
-    print("Bot iniciado (Google Sheets). Presioná Ctrl+C para detenerlo.")
+    app.add_handler(MessageHandler(filters.VOICE, manejar_voz))
+    print("Bot iniciado (texto + voz). Presioná Ctrl+C para detenerlo.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

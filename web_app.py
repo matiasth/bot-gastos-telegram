@@ -1,0 +1,82 @@
+import json
+import os
+from datetime import datetime
+
+import gspread
+import pandas as pd
+import streamlit as st
+
+SHEET_ID = os.getenv("SHEET_ID", "16ubX8tkwshnbiqbQKkRdJsO_S_jkBjeui1M6Xu76W7A")
+
+creds_json = os.getenv("GOOGLE_CREDENTIALS")
+if creds_json:
+    gc = gspread.service_account_from_dict(json.loads(creds_json))
+else:
+    gc = gspread.service_account(filename="credenciales.json")
+sh = gc.open_by_key(SHEET_ID)
+ws = sh.worksheet("detalle gastos")
+
+
+def cargar_datos():
+    datos = ws.get_all_values()
+    if len(datos) <= 1:
+        return pd.DataFrame(columns=["Fecha", "Concepto", "Monto"])
+    df = pd.DataFrame(datos[1:], columns=["Fecha", "Concepto", "Monto"])
+    df["Monto"] = pd.to_numeric(df["Monto"], errors="coerce")
+    return df.dropna(subset=["Monto"]).reset_index(drop=True)
+
+
+def guardar_todo(df):
+    df = df.dropna(subset=["Concepto", "Monto"]).reset_index(drop=True)
+    datos = [["Fecha", "Concepto", "Monto"]]
+    for _, row in df.iterrows():
+        datos.append([str(row["Fecha"]), str(row["Concepto"]), float(row["Monto"])])
+    ws.batch_clear([f"A1:C{ws.row_count}"])
+    ws.update(range_name="A1", values=datos)
+
+
+st.set_page_config(page_title="Panel de Gastos", layout="wide")
+st.title("Panel de Gastos")
+
+df = cargar_datos()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Gastos", f"${df['Monto'].sum():,.0f}")
+col2.metric("Cantidad", len(df))
+col3.metric("Promedio", f"${df['Monto'].mean():,.0f}" if len(df) > 0 else "$0")
+
+st.divider()
+st.subheader("Agregar gasto")
+
+with st.form("nuevo_gasto", clear_on_submit=True):
+    c1, c2, c3 = st.columns([2, 1, 1])
+    with c1:
+        concepto = st.text_input("Concepto")
+    with c2:
+        monto = st.number_input("Monto", min_value=0.0, step=100.0, format="%.0f")
+    with c3:
+        fecha = st.date_input("Fecha", value=datetime.today())
+    if st.form_submit_button("Agregar"):
+        if concepto and monto > 0:
+            ws.append_row([str(fecha), concepto.capitalize(), monto])
+            st.rerun()
+
+st.divider()
+st.subheader("Editar / Eliminar")
+
+edit_df = st.data_editor(
+    df,
+    use_container_width=True,
+    num_rows="dynamic",
+    column_config={
+        "Fecha": st.column_config.TextColumn("Fecha"),
+        "Concepto": st.column_config.TextColumn("Concepto"),
+        "Monto": st.column_config.NumberColumn("Monto", format="$%.0f"),
+    },
+    key="editor",
+)
+
+if st.button("Guardar cambios"):
+    guardar_todo(edit_df)
+    st.success("Cambios guardados en Google Sheets.")
+    st.rerun()
